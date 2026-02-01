@@ -1,32 +1,64 @@
-export const initialStore=()=>{
-  return{
-    message: null,
-    todos: [
-      {
-        id: 1,
-        title: "Make the bed",
-        background: null,
-      },
-      {
-        id: 2,
-        title: "Do my homework",
-        background: null,
-      }
-    ]
-  }
-}
+export const initialStore = () => ({
+  contacts: [],
+  contactsLoading: false,
+  contactsSaving: false,
+  contactsError: null
+});
 
-export default function storeReducer(store, action = {}) {
-  switch(action.type){
-    case 'add_task':
+export const storeReducer = (store, action) => {
+  switch (action.type) {
+    case "contacts/loading":
+      return { ...store, contactsLoading: true, contactsError: null };
 
-      const { id,  color } = action.payload
+    case "contacts/saving":
+      return { ...store, contactsSaving: true, contactsError: null };
 
+    case "contacts/loaded":
       return {
         ...store,
-        todos: store.todos.map((todo) => (todo.id === id ? { ...todo, background: color } : todo))
+        contactsLoading: false,
+        contactsSaving: false,
+        contactsError: null,
+        contacts: Array.isArray(action.payload) ? action.payload : []
       };
+
+    case "contacts/added":
+      return {
+        ...store,
+        contactsSaving: false,
+        contactsError: null,
+        contacts: [action.payload, ...store.contacts]
+      };
+
+    case "contacts/updated": {
+      const updated = action.payload;
+      return {
+        ...store,
+        contactsSaving: false,
+        contactsError: null,
+        contacts: store.contacts.map((c) =>
+          String(c.id) === String(updated.id) ? updated : c
+        )
+      };
+    }
+
+    case "contacts/deleted":
+      return {
+        ...store,
+        contactsSaving: false,
+        contactsError: null,
+        contacts: store.contacts.filter((c) => String(c.id) !== String(action.payload))
+      };
+
+    case "contacts/error":
+      return {
+        ...store,
+        contactsLoading: false,
+        contactsSaving: false,
+        contactsError: action.payload || "Unknown error"
+      };
+
     default:
-      throw Error('Unknown action.');
-  }    
-}
+      return store;
+  }
+};
